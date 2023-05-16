@@ -22,3 +22,11 @@ function start_server() {
 }
 
 start_server();
+
+/**
+ * Función que suma dos números.
+ * @param {number} a - El primer número a sumar.
+ * @param {number} b - El segundo número a sumar.
+ * @returns {number} La suma de los dos números.
+ * @throws {Error} Si alguno de los parámetros no es un número.
+ */
