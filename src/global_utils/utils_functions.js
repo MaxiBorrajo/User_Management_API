@@ -56,9 +56,9 @@ function is_lesser_or_equal_than(first_parameter, second_parameter) {
  * if not, returns array without changes.
  */
 function delete_element_from_array(element, array) {
-  const index = array.indexOf(element);
-  if (index !== -1) {
-    array.splice(index, 1);
+  const INDEX = array.indexOf(element);
+  if (INDEX !== -1) {
+    array.splice(INDEX, 1);
   }
   return array;
 }

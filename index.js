@@ -30,3 +30,15 @@ start_server();
  * @returns {number} La suma de los dos números.
  * @throws {Error} Si alguno de los parámetros no es un número.
  */
+
+/**
+ * Middleware de autenticación.
+ * 
+ * Este middleware se utiliza para autenticar a los usuarios que acceden a una ruta protegida.
+ * Comprueba si el usuario ha iniciado sesión y si tiene las credenciales adecuadas.
+ * 
+ * @param {Object} req - El objeto de solicitud HTTP.
+ * @param {Object} res - El objeto de respuesta HTTP.
+ * @param {Function} next - La siguiente función en la cadena de middleware.
+ * @throws {Error} Si el usuario no está autenticado o no tiene los permisos adecuados.
+ */

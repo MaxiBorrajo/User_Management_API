@@ -1,7 +1,7 @@
 //imports
 const MONGOOSE = require("mongoose");
 const DATABASE_URI = process.env.DB_URI;
-
+const CustomError = require('../global_utils/custom_error')
 //config
 MONGOOSE.set("strictQuery", true);
 
@@ -20,7 +20,7 @@ async function database_connection() {
     })
     .catch((err) => {
       //If doesn't connect, throws an error
-      throw new Error(`Connection to database failed, ERROR: ${err.message}`);
+      throw new CustomError(`Connection to database failed, ERROR: ${err.message}`);
     });
 }
 

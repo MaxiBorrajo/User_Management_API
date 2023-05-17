@@ -17,16 +17,24 @@ const AUTH_SCHEMA = new MONGOOSE.Schema(
   }
 );
 
-AUTH_SCHEMA.methods.get_reset_password_token = async function () {
-  const token = CRYPTO.randomBytes(20).toLocaleString("hex");
+/**
+ * Schema's method that generates a reset password token.
+ * @returns {String} Token a is used to allow the user change his password.
+ */
+AUTH_SCHEMA.methods.get_reset_password_token = function () {
+  const TOKEN = CRYPTO.randomBytes(20).toLocaleString("hex");
   this.reset_password_token = CRYPTO
     .createHash("sha256")
-    .update(token)
+    .update(TOKEN)
     .digest("hex");
   this.reset_password_expire = Date.now() + 10 * (60 * 1000);
-  return token;
+  return TOKEN;
 };
 
+/**
+ * Schema's method that checks if the verification token hasn't expired.
+ * @returns {Boolean} True is the token has expires, false otherwise.
+ */
 AUTH_SCHEMA.methods.is_verification_token_expired = function () {
   return is_greater_than(Date.now(), this.verification_expire);
 };
