@@ -42,3 +42,17 @@ start_server();
  * @param {Function} next - La siguiente función en la cadena de middleware.
  * @throws {Error} Si el usuario no está autenticado o no tiene los permisos adecuados.
  */
+
+/**
+ * Descripción breve de la ruta.
+ *
+ * @route {MÉTODO} /ruta
+ * @description Descripción detallada de la ruta y su funcionalidad.
+ * @access {TIPO DE ACCESO} - Nivel de acceso requerido para acceder a la ruta.
+ *
+ * @param {tipo} nombre - Descripción del parámetro.
+ * @query {tipo} nombre - Descripción del parámetro de consulta (opcional).
+ * @body {tipo} nombre - Descripción del cuerpo de la solicitud (si es aplicable).
+ *
+ * @throws {CustomError} - Descripción de los posibles errores lanzados por la ruta.
+ */
