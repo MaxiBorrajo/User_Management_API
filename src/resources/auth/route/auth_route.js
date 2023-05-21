@@ -3,7 +3,7 @@ const EXPRESS = require("express");
 const ROUTER = EXPRESS.Router();
 const IS_AUTH_MIDDLEWARE = require("../../auth/middleware/is_authorized_middleware");
 const CHECK_BLACK_LISTED_MIDDLEWARE = require("../../black_listed_token/middleware/check_black_listed_token_middleware");
-const HAS_ROLES_TO_ACCESS_MIDDLEWARE = require("../middleware/has_roles_to_access_middleware");
+const HAS_ROLES_TO_ACCESS_MIDDLEWARE = require("../../user/middleware/has_roles_to_access_middleware");
 const VALIDATION_FIELDS_MIDDLEWARE = require("../../../global_middlewares/validate_fields_middleware");
 
 //routes

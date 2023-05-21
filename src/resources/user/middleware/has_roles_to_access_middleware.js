@@ -1,4 +1,4 @@
-const CustomError = require("../utils/customError");
+const CustomError = require("../../../global_utils/custom_error");
 
 /**
  * Middleware that checks if the user has the required roles to access a specific route.

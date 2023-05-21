@@ -29,7 +29,7 @@ async function is_authenticated_middleware(req, res, next) {
     return next(new CustomError("Not authorized", 401));
   }
   req.user = {
-    _id: USER_FOUND._id,
+    id: USER_FOUND._id,
     role: USER_FOUND.role,
   };
   return next();

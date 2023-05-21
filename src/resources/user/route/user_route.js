@@ -5,20 +5,28 @@ const IS_AUTH_MIDDLEWARE = require("../../auth/middleware/is_authorized_middlewa
 const CHECK_BLACK_LISTED_MIDDLEWARE = require("../../black_listed_token/middleware/check_black_listed_token_middleware");
 const HAS_ROLES_TO_ACCESS_MIDDLEWARE = require("../middleware/has_roles_to_access_middleware");
 const VALIDATION_FIELDS_MIDDLEWARE = require("../../../global_middlewares/validate_fields_middleware");
+
 //routes
 
 /**
- * Get all the users that match the filters given by the queries.
+ * Get all the users that match the filters given by the queries, if there is any filter,
+ * else, it gets all users stored in database.
  *
  * @route {GET} /v1/users/
  * Requires authentication, checks for black listed tokens, and requires certain roles.
- * Users can use certain queries, admin can use all. Between () is specified.
+ * Users can access to certain information of the users, admin can access to all,
+ * but no one can filter by password. In the queries, between () is specified.
  * @query {String} email (ADMIN)
  * @query {String[]} role (ADMIN, USER)
  * @query {String} name (ADMIN, USER)
  * @query {String} last_name (ADMIN, USER)
  * @query {String} phone_number (ADMIN)
  * @query {String} country (ADMIN, USER)
+ * @query {Object} address (ADMIN) Object with attributes:
+ * - street: String
+ * - city: String
+ * - state: String
+ * - zip_code: String
  * @query {Number} age (ADMIN, USER) - It must be an integer
  * @query {String} gender (ADMIN, USER)
  * @query {Boolean} is_verified (ADMIN, USER)
@@ -40,7 +48,7 @@ ROUTER.get(
 );
 
 /**
- * Get a user by its id.
+ * Get a user by his id.
  *
  * @route {GET} /v1/users/:id or active
  * Requires authentication, checks for black listed tokens, and requires certain roles.
@@ -54,7 +62,6 @@ ROUTER.get(
  * - gender
  * - is_verified
  * - is_active
- * - is_public
  * - studies
  * - professions
  * - interests

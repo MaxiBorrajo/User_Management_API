@@ -1,4 +1,4 @@
-const CustomError = require("../utils/customError");
+const CustomError = require("../global_utils/custom_error");
 
 /**
  * Middleware function that checks if the body of the request meets certain requirements.

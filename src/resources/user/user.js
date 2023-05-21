@@ -28,10 +28,7 @@ const USER_SCHEMA = new MONGOOSE.Schema(
     phone_number: String,
     country: String,
     address: {
-      street: String,
-      city: String,
-      state: String,
-      zip_code: String,
+      type: { street: String, city: String, state: String, zip_code: String },
       select: false,
     },
     age: {
@@ -55,25 +52,24 @@ const USER_SCHEMA = new MONGOOSE.Schema(
       type: Boolean,
       default: false,
     },
-    studies:{
-      type:[String],
-      default: []
+    studies: {
+      type: [String],
+      default: [],
     },
-    professions:{
-      type:[String],
-      default: []
+    professions: {
+      type: [String],
+      default: [],
     },
-    interests:{
-      type:[String],
-      default: []
-    }
+    interests: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,
     versionKey: false,
   }
 );
-
 
 /**
  * Middleware that encrypts the user's password before saving it to the database.
@@ -85,7 +81,7 @@ USER_SCHEMA.pre("save", async function (next) {
     next();
   } else {
     const SALT = await BCRYPT.genSalt(10);
-    this.password = BCRYPT.hash(this.password, SALT);
+    this.password = await BCRYPT.hash(this.password, SALT);
     next();
   }
 });
@@ -98,7 +94,6 @@ USER_SCHEMA.pre("save", async function (next) {
 USER_SCHEMA.methods.match_passwords = async function (password) {
   return await BCRYPT.compare(password, this.password);
 };
-
 
 /**
  * Schema's method that generates a Json Web Token.
