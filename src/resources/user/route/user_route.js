@@ -5,7 +5,8 @@ const IS_AUTH_MIDDLEWARE = require("../../auth/middleware/is_authorized_middlewa
 const CHECK_BLACK_LISTED_MIDDLEWARE = require("../../black_listed_token/middleware/check_black_listed_token_middleware");
 const HAS_ROLES_TO_ACCESS_MIDDLEWARE = require("../middleware/has_roles_to_access_middleware");
 const VALIDATION_FIELDS_MIDDLEWARE = require("../../../global_middlewares/validate_fields_middleware");
-
+const USER_CONTROLLER = require('../controller/user_controller')
+const CACHE = require('../../../../route_cache');
 //routes
 
 /**
@@ -14,7 +15,7 @@ const VALIDATION_FIELDS_MIDDLEWARE = require("../../../global_middlewares/valida
  *
  * @route {GET} /v1/users/
  * Requires authentication, checks for black listed tokens, and requires certain roles.
- * Users can access to certain information of the users, admin can access to all,
+ * Role USER can access to certain information of the users, ADMIN can access to all,
  * but no one can filter by password. In the queries, between () is specified.
  * @query {String} email (ADMIN)
  * @query {String[]} role (ADMIN, USER)
@@ -42,9 +43,8 @@ ROUTER.get(
   IS_AUTH_MIDDLEWARE,
   CHECK_BLACK_LISTED_MIDDLEWARE,
   HAS_ROLES_TO_ACCESS_MIDDLEWARE(["USER", "ADMIN"]),
-  (req, res, next) => {
-    console.log("GOAL");
-  }
+  CACHE(300),
+  USER_CONTROLLER.get_all_users
 );
 
 /**
@@ -52,8 +52,8 @@ ROUTER.get(
  *
  * @route {GET} /v1/users/:id or active
  * Requires authentication, checks for black listed tokens, and requires certain roles.
- * Admins can access to all the information of a user,
- * Users only to certain information, specifically:
+ * Role ADMIN can access to all the information of a user,
+ * Role USER only to certain information, specifically:
  * - role
  * - name
  * - last_name
@@ -67,9 +67,9 @@ ROUTER.get(
  * - interests
  *
  * Alternatively, instead of the id of a user, if 'active' is written, the information
- * of the logged user will be send and and in its entirety.
+ * of the logged user will be send and in its entirety.
  *
- * Also, users who do not have public accounts will not be seen, but they will be seen by Admins.
+ * Also, users who do not have public accounts will not be seen, but they will be seen by users with role ADMIN.
  *
  * @throws {CustomError} - If a given id isn't found in database.
  */
@@ -78,9 +78,8 @@ ROUTER.get(
   IS_AUTH_MIDDLEWARE,
   CHECK_BLACK_LISTED_MIDDLEWARE,
   HAS_ROLES_TO_ACCESS_MIDDLEWARE(["USER", "ADMIN"]),
-  (req, res, next) => {
-    console.log("GOAL");
-  }
+  CACHE(300),
+  USER_CONTROLLER.get_user_by_id
 );
 
 /**
@@ -90,9 +89,9 @@ ROUTER.get(
  * @body {String} email - Is required and must be a valid email.
  * @body {String} password - Is required and must have
  * at least one lowercase letter, one uppercase letter,
- * one digit, one special character, and be 8 characters or longer.
+ * one digit, one special character, and 8 characters or longer.
  * @throws {CustomError} - If attributes of the body don't match the requirements specified before,
- * if the email is already taken or if role or is_verified attributes are in the body, because they
+ * if the email is already taken or if role, is_verified and is_active attributes are in the body, because they
  * cannot be set in creation of a user.
  */
 ROUTER.post(
@@ -107,19 +106,17 @@ ROUTER.post(
   IS_AUTH_MIDDLEWARE,
   CHECK_BLACK_LISTED_MIDDLEWARE,
   HAS_ROLES_TO_ACCESS_MIDDLEWARE(["USER", "ADMIN"]),
-  (req, res, next) => {
-    console.log("GOAL");
-  }
+  USER_CONTROLLER.creates_a_new_user
 );
 
 /**
- * Update a user's information by its id.
+ * Update a user's information by his id.
  *
  * @route {PUT} /v1/users/:id or active
  * Requires authentication, checks for black listed tokens, and requires certain roles.
- * Only admins can change others user's information. Users can only change their
+ * Only users with role ADMIN can change others user's information. Role USER can only change their
  * information, but not all of them, by writing their id or 'active' as a parameter
- * of the route. And no one can change a password by this route.
+ * of the route. And no one can change a password or is_verified attributes by this route.
  *
  * Between ( ) specifies which attributes can be used by which roles.
  * @body {String} email (ADMIN)
@@ -154,9 +151,7 @@ ROUTER.put(
   IS_AUTH_MIDDLEWARE,
   CHECK_BLACK_LISTED_MIDDLEWARE,
   HAS_ROLES_TO_ACCESS_MIDDLEWARE(["USER", "ADMIN"]),
-  (req, res, next) => {
-    console.log("GOAL");
-  }
+  USER_CONTROLLER.update_user_by_id
 );
 
 /**
@@ -164,7 +159,7 @@ ROUTER.put(
  *
  * @route {DELETE} /v1/users/:id or active
  * Requires authentication, checks for black listed tokens, and requires certain roles.
- * Admins can delete any user, Users only themselves by writing 'active' as a parameter of
+ * Role ADMIN can delete any user, role USER only themselves by writing 'active' as a parameter of
  * the route
  *
  * @throws {CustomError} - If a given id isn't found in database or if a user try to delete
@@ -175,9 +170,7 @@ ROUTER.delete(
   IS_AUTH_MIDDLEWARE,
   CHECK_BLACK_LISTED_MIDDLEWARE,
   HAS_ROLES_TO_ACCESS_MIDDLEWARE(["USER", "ADMIN"]),
-  (req, res, next) => {
-    console.log("GOAL");
-  }
+  USER_CONTROLLER.delete_user_by_id
 );
 
 

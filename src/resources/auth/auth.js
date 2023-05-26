@@ -1,6 +1,6 @@
 //imports
 const MONGOOSE = require("mongoose");
-const CRYPTO = require("crypto");
+const CRYPTO_JS = require("crypto-js");
 const { is_greater_than } = require("../../global_utils/utils_functions");
 //schema
 const AUTH_SCHEMA = new MONGOOSE.Schema(
@@ -19,15 +19,32 @@ const AUTH_SCHEMA = new MONGOOSE.Schema(
 
 /**
  * Schema's method that generates a reset password token.
- * @returns {String} Token a is used to allow the user change his password.
+ * @param {String} user_id - Id of a user store in database
+ * @param {String} new_password - The new password to add
+ * @returns {String} A token that is used to allow the user change his password.
  */
-AUTH_SCHEMA.methods.get_reset_password_token = function () {
-  const TOKEN = CRYPTO.randomBytes(20).toLocaleString("hex");
-  this.reset_password_token = CRYPTO
-    .createHash("sha256")
-    .update(TOKEN)
-    .digest("hex");
-  this.reset_password_expire = Date.now() + 10 * (60 * 1000);
+AUTH_SCHEMA.methods.get_reset_password_token = async function (
+  user_id,
+  new_password
+) {
+  
+  const ENCRYPTED_PASSWORD = await CRYPTO_JS.AES.encrypt(
+    new_password,
+    process.env.SECRET
+  ).toString();
+
+  const PAYLOAD = {
+    user_id: user_id,
+    encrypted_password: ENCRYPTED_PASSWORD,
+  };
+
+  const TOKEN = await jwt.sign(PAYLOAD, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
+
+  this.reset_password_token = TOKEN;
+  this.reset_password_expire = Date.now() + 3600000; // 1 hora de expiración
+
   return TOKEN;
 };
 

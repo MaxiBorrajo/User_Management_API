@@ -86,6 +86,7 @@ function return_success_response(res, status, resource, links) {
  * Sends a verification email to a user.
  * @param {Object} user - User object with email and role.
  * @param {Object} auth - Authentication/authorization object for the user.
+ * @throws {CustomError} - If the sending fail
  */
 async function send_verification(user, auth) {
   const VERIFICATION_CODE = UUID.v4();
@@ -93,7 +94,6 @@ async function send_verification(user, auth) {
   const TOKEN = JWT.sign(
     {
       email: user.email,
-      role: user.role,
       verification_code: VERIFICATION_CODE,
     },
     process.env.JWT_SECRET
@@ -106,15 +106,24 @@ async function send_verification(user, auth) {
       <a href='${VERIFICATION_URL}' clicktracking='off'>Verify Account</a>
     `;
 
-  SEND_EMAIL({
-    to: user.email,
-    subject: "Verify your account",
-    text: EMAIL_BODY,
-  });
+  
+  try {
+    SEND_EMAIL({
+      to: user.email,
+      subject: "Verify your account",
+      text: EMAIL_BODY,
+    });
+  
+    auth.verification_code = VERIFICATION_CODE;
+    auth.verification_expire = VERIFICATION_EXPIRATION;
+    await auth.save();
+  } catch (error) {
+    auth.verification_code = undefined;
+    auth.verification_expire = undefined;
 
-  auth.verification_code = VERIFICATION_CODE;
-  auth.verification_expire = VERIFICATION_EXPIRATION;
-  await auth.save();
+    await auth.save();
+    return next(new CustomError(error.message, 500));
+  }
 }
 
 module.exports = {

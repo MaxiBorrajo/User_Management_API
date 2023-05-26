@@ -210,7 +210,11 @@ const POST_NEW_USER = {
     },
     password: {
       requirements:
-        "Must have at least one lowercase letter, one uppercase letter, one digit, one special character, and be 8 characters or longer.",
+      ["Must have at least one lowercase letter",
+      "Must have at least one uppercase letter",
+      "Must have at least one digit", 
+      "Must have at least one special character",
+      "Must have 8 characters or longer"]
     },
   },
   example_body: {

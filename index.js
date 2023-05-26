@@ -1,6 +1,7 @@
 //imports
 const SERVER = require("./server");
 const USER = require("./src/resources/user/user");
+const AUTH = require("./src/resources/auth/auth");
 const {
   database_connection,
 } = require("./src/global_config/database_connection");
@@ -36,9 +37,9 @@ async function createRandomUsers() {
         email: `usuario${i}@example.com`,
         role: Math.random() > 0.5 ? "USER" : "ADMIN",
         password: `contraseña${randomNumber}`,
-        name: `Usuario ${randomNumber}`,   
+        name: `Usuario ${randomNumber}`,
         last_name: "Ejemplo",
-        profile_photo: `url_foto${randomNumber}`, 
+        profile_photo: `url_foto${randomNumber}`,
         phone_number: `${randomNumber}${randomNumber}${randomNumber}${randomNumber}${randomNumber}${randomNumber}${randomNumber}${randomNumber}`,
         country: `País ${randomNumber}`,
         address: {
@@ -57,12 +58,17 @@ async function createRandomUsers() {
         interests: [`Interés ${randomNumber}`, `Interés ${randomNumber + 1}`],
       });
 
-      await user.save();
-      console.log(`Usuario creado`);
+      await user.save().then(async (newUser) => {
+        AUTH.create({ user_id: newUser._id });
+      });
+
+      const newUser = await user.save();
+      await AUTH.create({ user_id: newUser._id });
+      console.log(`Usuario creado con _id: ${newUser._id}`);
     }
     console.log("Todos los usuarios se han creado correctamente.");
   } catch (error) {
-    console.error("Error al crear usuarios:", error); 
+    console.error("Error al crear usuarios:", error);
   }
 }
 

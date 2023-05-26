@@ -36,7 +36,7 @@ async function check_black_listed_tokens_middleware(req, res, next) {
     return next(new CustomError("Invalid authorization", 401));
   }
   const TOKEN = req.cookies.jwt;
-  const USER_ID = req.user._id;
+  const USER_ID = req.user.id;
   is_token_repeated(USER_ID, TOKEN, next);
 }
 

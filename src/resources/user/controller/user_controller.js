@@ -7,6 +7,7 @@ const {
   send_verification,
 } = require("../../../global_utils/utils_functions");
 const USER_LINKS = require("../utils/response_links");
+const AUTH_LINKS = require("../../auth/utils/response_links")
 
 /**
  * Controller that gets all the users that match the filters given by the queries,
@@ -15,7 +16,7 @@ const USER_LINKS = require("../utils/response_links");
  * @param {Object} req - The request object from the HTTP request.
  * @param {Object} res - The response object from the HTTP response.
  * @param {Function} next - The next function in the middleware chain.
- * @throws {CustomError} If the user tries to filter by password, if a User tries to filter
+ * @throws {CustomError} If the user tries to filter by password, if a role USER tries to filter
  * by something he isn't allowed or if no user is founded that match the given filters.
  */
 async function get_all_users(req, res, next) {
@@ -79,7 +80,7 @@ async function get_all_users(req, res, next) {
  * @param {Object} req - The request object from the HTTP request.
  * @param {Object} res - The response object from the HTTP response.
  * @param {Function} next - The next function in the middleware chain.
- * @throws {CustomError} If the user isn't founded or is private
+ * @throws {CustomError} If the user isn't founded
  */
 async function get_user_by_id(req, res, next) {
   const ID_USER = req.params.id === "active" ? req.user.id : req.params.id;
@@ -96,7 +97,7 @@ async function get_user_by_id(req, res, next) {
     return next(new CustomError(`User not found`, 404));
   }
 
-  if (req.params.id === "active" || req.user.role === "ADMIN") {
+  if (ID_USER === "active" || ID_USER === req.user.id || req.user.role === "ADMIN" ) {
     return_success_response(res, 200, USER_FOUND, LINKS);
   }
 
@@ -143,7 +144,7 @@ async function creates_a_new_user(req, res, next) {
     self: USER_LINKS.POST_NEW_USER,
     sign_in: AUTH_LINKS.SIGN_IN,
     forgot_password: AUTH_LINKS.FORGOT_PASSWORD,
-    change_email: AUTH_LINKS.NEW_EMAIL,
+    change_email: AUTH_LINKS.CHANGE_EMAIL,
     delete: USER_LINKS.DELETE_USER_BY_ID,
   };
 
@@ -182,7 +183,7 @@ async function update_user_by_id(req, res, next) {
 
   const ID_USER = req.params.id === "active" ? req.user.id : req.params.id;
 
-  if (req.user.role === "USER" && ID_USER !== req.user.id) {
+  if (req.user.role === "USER" && (ID_USER !== req.user.id || ID_USER !== 'active')) {
     return next(
       new CustomError(
         `USER role is not allowed to change others information.`,
@@ -205,7 +206,7 @@ async function update_user_by_id(req, res, next) {
     self: USER_LINKS.PUT_USER_BY_ID,
     user: USER_LINKS.GET_USER_BY_ID,
     forgot_password: AUTH_LINKS.FORGOT_PASSWORD,
-    change_email: AUTH_LINKS.NEW_EMAIL,
+    change_email: AUTH_LINKS.CHANGE_EMAIL,
   };
 
   const RESOURCE = {
@@ -227,7 +228,7 @@ async function update_user_by_id(req, res, next) {
 async function delete_user_by_id(req, res, next) {
   const ID_USER = req.params.id === "active" ? req.user.id : req.params.id;
 
-  if (req.user.role === "USER" && ID_USER !== req.user.id) {
+  if (req.user.role === "USER" && (ID_USER !== req.user.id || ID_USER !== 'active')) {
     return next(
       new CustomError(
         `USER role is not allowed to delete others accounts.`,
