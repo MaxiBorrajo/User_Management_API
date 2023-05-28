@@ -2,6 +2,7 @@
 const MONGOOSE = require("mongoose");
 const BCRYPT = require("bcrypt");
 const JWT = require("jsonwebtoken");
+const CustomError = require("../../global_utils/custom_error");
 //schema
 const USER_SCHEMA = new MONGOOSE.Schema(
   {

@@ -103,9 +103,6 @@ ROUTER.post(
     "is_verified",
     "is_active",
   ]),
-  IS_AUTH_MIDDLEWARE,
-  CHECK_BLACK_LISTED_MIDDLEWARE,
-  HAS_ROLES_TO_ACCESS_MIDDLEWARE(["USER", "ADMIN"]),
   USER_CONTROLLER.creates_a_new_user
 );
 

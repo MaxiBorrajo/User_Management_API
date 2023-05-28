@@ -307,7 +307,7 @@ const DELETE_USER_BY_ID = {
   href: `${URL}:id`,
   method: 'DELETE',
   description:
-    "Delete a user by its id. Admins can delete any user, Users only themselves by writing 'active' as a parameter of the route",
+    "Delete a user by its id. Role ADMIN can delete any user, role USER only themselves by writing 'active' as a parameter of the route",
   usage: `${URL}60a762dc8f7c670015e8fb34`
 };
 

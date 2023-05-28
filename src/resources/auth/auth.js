@@ -2,6 +2,7 @@
 const MONGOOSE = require("mongoose");
 const CRYPTO_JS = require("crypto-js");
 const { is_greater_than } = require("../../global_utils/utils_functions");
+const JWT = require('jsonwebtoken')
 //schema
 const AUTH_SCHEMA = new MONGOOSE.Schema(
   {
@@ -38,7 +39,7 @@ AUTH_SCHEMA.methods.get_reset_password_token = async function (
     encrypted_password: ENCRYPTED_PASSWORD,
   };
 
-  const TOKEN = await jwt.sign(PAYLOAD, process.env.JWT_SECRET, {
+  const TOKEN = await JWT.sign(PAYLOAD, process.env.JWT_SECRET, {
     expiresIn: "1h",
   });
 

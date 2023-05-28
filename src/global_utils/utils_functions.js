@@ -108,6 +108,7 @@ async function send_verification(user, auth) {
 
   
   try {
+    console.log(user.email)
     SEND_EMAIL({
       to: user.email,
       subject: "Verify your account",

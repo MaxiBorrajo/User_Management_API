@@ -7,7 +7,7 @@ const {
   send_verification,
 } = require("../../../global_utils/utils_functions");
 const USER_LINKS = require("../utils/response_links");
-const AUTH_LINKS = require("../../auth/utils/response_links")
+const AUTH_LINKS = require("../../auth/utils/response_links");
 
 /**
  * Controller that gets all the users that match the filters given by the queries,
@@ -56,10 +56,10 @@ async function get_all_users(req, res, next) {
       $and: [req.query, { is_public: true }],
     });
   } else {
-    USERS_FOUND = await USER.find(req.query);
+    USERS_FOUND = await USER.find(req.query).select("+address +email");
   }
 
-  if (USERS_FOUND.length >= 0) {
+  if (USERS_FOUND.length <= 0) {
     return next(
       new CustomError(`No users were found that match the given filters`, 404)
     );
@@ -71,7 +71,7 @@ async function get_all_users(req, res, next) {
     active: USER_LINKS.GET_ACTIVE_USER,
   };
 
-  return_success_response(res, 200, USERS_FOUND, LINKS);
+  return return_success_response(res, 200, USERS_FOUND, LINKS);
 }
 
 /**
@@ -91,14 +91,20 @@ async function get_user_by_id(req, res, next) {
     delete: USER_LINKS.DELETE_USER_BY_ID,
   };
 
-  const USER_FOUND = await USER.findOne({ _id: ID_USER }).select("+address");
+  const USER_FOUND = await USER.findOne({ _id: ID_USER }).select(
+    "+address +email"
+  );
 
   if (!USER_FOUND) {
     return next(new CustomError(`User not found`, 404));
   }
 
-  if (ID_USER === "active" || ID_USER === req.user.id || req.user.role === "ADMIN" ) {
-    return_success_response(res, 200, USER_FOUND, LINKS);
+  if (
+    ID_USER === "active" ||
+    ID_USER === req.user.id ||
+    req.user.role === "ADMIN"
+  ) {
+    return return_success_response(res, 200, USER_FOUND, LINKS);
   }
 
   if (!USER_FOUND.is_public) {
@@ -120,7 +126,7 @@ async function get_user_by_id(req, res, next) {
     interests: USER_FOUND.interests,
   };
 
-  return_success_response(res, 200, USER_FOUND_BY_ID_AND_USER, LINKS);
+  return return_success_response(res, 200, USER_FOUND_BY_ID_AND_USER, LINKS);
 }
 
 /**
@@ -149,11 +155,12 @@ async function creates_a_new_user(req, res, next) {
   };
 
   const RESOURCE = {
-    message: "User created succesfully",
+    message:
+      "User created succesfully. Go to your email account and get verified to access to all the resources.",
     user: NEW_USER,
   };
 
-  return_success_response(res, 201, RESOURCE, LINKS);
+  return return_success_response(res, 201, RESOURCE, LINKS);
 }
 
 /**
@@ -183,13 +190,33 @@ async function update_user_by_id(req, res, next) {
 
   const ID_USER = req.params.id === "active" ? req.user.id : req.params.id;
 
-  if (req.user.role === "USER" && (ID_USER !== req.user.id || ID_USER !== 'active')) {
+  if (
+    req.user.role === "USER" &&
+    req.params.id !== req.user.id.toString() &&
+    req.params.id !== "active"
+  ) {
     return next(
       new CustomError(
         `USER role is not allowed to change others information.`,
         400
       )
     );
+  }
+
+  if (req.body.email) {
+    const REGULAR_EXPRESSION_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!REGULAR_EXPRESSION_EMAIL.test(req.body.email)) {
+      return next(
+        new CustomError(
+          "The value of the 'email' attribute must be a valid email address",
+          422
+        )
+      );
+    }
+    const USER_FOUND = await USER.findOne({ email: req.body.email });
+    if (USER_FOUND) {
+      return next(new CustomError("User already exists", 400));
+    }
   }
 
   const USER_UPDATED = await USER.updateOne({ _id: ID_USER }, req.body);
@@ -213,7 +240,7 @@ async function update_user_by_id(req, res, next) {
     message: "User updated successfully.",
   };
 
-  return_success_response(res, 201, RESOURCE, LINKS);
+  return return_success_response(res, 201, RESOURCE, LINKS);
 }
 
 /**
@@ -227,8 +254,11 @@ async function update_user_by_id(req, res, next) {
  */
 async function delete_user_by_id(req, res, next) {
   const ID_USER = req.params.id === "active" ? req.user.id : req.params.id;
-
-  if (req.user.role === "USER" && (ID_USER !== req.user.id || ID_USER !== 'active')) {
+  if (
+    req.user.role === "USER" &&
+    req.params.id !== req.user.id.toString() &&
+    req.params.id !== "active"
+  ) {
     return next(
       new CustomError(
         `USER role is not allowed to delete others accounts.`,
@@ -244,7 +274,7 @@ async function delete_user_by_id(req, res, next) {
   }
 
   AUTH.deleteOne({ user_id: ID_USER });
-  
+
   BLACK_LISTED_TOKEN.deleteMany({ user_id: ID_USER });
 
   const LINKS = {
@@ -257,7 +287,7 @@ async function delete_user_by_id(req, res, next) {
     message: "User deleted successfully.",
   };
 
-  return_success_response(res, 200, RESOURCE, LINKS);
+  return return_success_response(res, 200, RESOURCE, LINKS);
 }
 
 module.exports = {

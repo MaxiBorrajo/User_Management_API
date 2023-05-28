@@ -84,7 +84,7 @@ function body_must_not_contain_attributes(attributes_to_exclude) {
     );
     if (FOUND_ATTRIBUTE) {
       return next(
-        new CustomError(`The attribute '${FOUND_ATTRIBUTE}' is not allowed`)
+        new CustomError(`The attribute '${FOUND_ATTRIBUTE}' is not allowed`, 400)
       );
     }
     return next();

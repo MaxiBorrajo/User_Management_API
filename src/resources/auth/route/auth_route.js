@@ -83,14 +83,14 @@ ROUTER.post(
 /**
  * Update the associated account with the new password encrypted in the token.
  *
- * @route {PATCH} /v1/auth/new_password/:reset_token
+ * @route {GET} /v1/auth/new_password/:reset_token
  *
  * Attributes written in the body will be just ignored.
  *
  * @throws {CustomError} - If the token is not same as the one stored in database,
  * if the token is expired, if the user isn't found in database.
  */
-ROUTER.patch("/new_password/:reset_token", AUTH_CONTROLLER.reset_password);
+ROUTER.get("/new_password/:reset_token", AUTH_CONTROLLER.reset_password);
 
 /**
  * Delete the authorization of the active account. Basically, is a sign out endpoint.
@@ -130,7 +130,7 @@ ROUTER.post(
 /**
  * The new email encrypted in the token is stored in database and gets verification
  *
- * @route {PATCH} /v1/auth/new_email/:token
+ * @route {GET} /v1/auth/new_email/:token
  *
  * Other attributes written in the body will be just ignored.
  *
@@ -138,7 +138,7 @@ ROUTER.post(
  * isn't found in database, if the token is not the same as the one stored in database,
  * if the token is expired or if the updating fail.
  */
-ROUTER.patch("/new_email/:token", AUTH_CONTROLLER.verify_new_email);
+ROUTER.get("/new_email/:token", AUTH_CONTROLLER.verify_new_email);
 
 //exports
 module.exports = ROUTER;

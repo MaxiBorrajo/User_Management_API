@@ -15,11 +15,13 @@ APP.use(EXPRESS.json());
 APP.use(EXPRESS.urlencoded({ extended: false }));
 APP.use(MORGAN("dev"));
 APP.use(COOKIE_PARSER());
-APP.use(ERROR_HANDLER_MIDDLEWARE);
 
 //routes
 APP.use("/v1/users", USER_ROUTE);
 APP.use("/v1/auth", AUTH_ROUTE);
+
+//global middlewares
+APP.use(ERROR_HANDLER_MIDDLEWARE);
 
 //exports
 module.exports = APP;

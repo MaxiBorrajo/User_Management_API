@@ -11,6 +11,7 @@ const {
 } = require("../../../global_utils/utils_functions");
 const JWT = require("jsonwebtoken");
 const CRYPTO_JS = require("crypto-js");
+const UUID = require("uuid");
 const AUTH_LINKS = require("../utils/response_links");
 const USER_LINKS = require("../../user/utils/response_links");
 
@@ -42,10 +43,12 @@ async function sign_in(req, res, next) {
       message:
         "You must verified your account. To send verification again use to the link below",
     };
-    return_success_response(res, 404, RESOURCE, LINKS);
+    return res
+        .status(404)
+        .json({ success: false, resource: RESOURCE, _links: LINKS });
   }
 
-  if (!(await USER_FOUND.match_passwords(password))) {
+  if (!(await USER_FOUND.match_passwords(req.body.password))) {
     return next(new CustomError("Invalid credentials", 400));
   }
 
@@ -75,7 +78,7 @@ async function sign_in(req, res, next) {
     security_token: TOKEN,
   };
 
-  return_success_response(res, 200, RESOURCE, LINKS);
+  return return_success_response(res, 200, RESOURCE, LINKS);
 }
 
 /**
@@ -87,7 +90,10 @@ async function sign_in(req, res, next) {
  * @throws {CustomError} If the user isn't found or if the user is already verified.
  */
 async function send_verification_again(req, res, next) {
-  const USER_FOUND = await USER.findOne({ email: req.body.email });
+  const USER_FOUND = await USER.findOne({ email: req.body.email }).select(
+    "+email"
+  );
+
   if (!USER_FOUND) {
     return next(new CustomError("User not found", 404));
   }
@@ -100,7 +106,7 @@ async function send_verification_again(req, res, next) {
   if (!AUTH_FOUND) {
     AUTH_FOUND = await AUTH.create({ user_id: USER_FOUND._id });
   }
-  await send_verification(USER_FOUND, AUTH_FOUND);
+  send_verification(USER_FOUND, AUTH_FOUND);
 
   const LINKS = {
     self: AUTH_LINKS.SEND_VERIFICATION_AGAIN,
@@ -115,7 +121,7 @@ async function send_verification_again(req, res, next) {
   const RESOURCE = {
     message: "Verification email sent",
   };
-  return_success_response(res, 200, RESOURCE, LINKS);
+  return return_success_response(res, 200, RESOURCE, LINKS);
 }
 
 /**
@@ -129,62 +135,66 @@ async function send_verification_again(req, res, next) {
  * one store in database, if it has expired or if the token is invalid.
  */
 async function verify_account(req, res, next) {
-  const PAYLOAD = JWT.verify(req.params.token, process.env.JWT_SECRET);
+  try {
+    const PAYLOAD = JWT.verify(req.params.token, process.env.JWT_SECRET);
 
-  if (!PAYLOAD) {
-    return next(new CustomError("Invalid token", 401));
-  }
+    const USER_FOUND = await USER.findOne({ email: PAYLOAD.email });
 
-  const USER_FOUND = await USER.findOne({ email: PAYLOAD.email });
+    if (!USER_FOUND) {
+      return next(new CustomError("User not found", 404));
+    }
 
-  if (!USER_FOUND) {
-    return next(new CustomError("User not found", 404));
-  }
+    if (USER_FOUND.is_verified) {
+      return next(new CustomError("You are already verified", 400));
+    }
 
-  if (USER_FOUND.is_verified) {
-    return next(new CustomError("You are already verified", 400));
-  }
+    let AUTH_FOUND = await AUTH.findOne({ user_id: USER_FOUND._id });
 
-  let AUTH_FOUND = await AUTH.findOne({ user_id: USER_FOUND._id });
+    if (!AUTH_FOUND) {
+      AUTH_FOUND = await AUTH.create({ user_id: USER_FOUND._id });
+    }
 
-  if (!AUTH_FOUND) {
-    AUTH_FOUND = await AUTH.create({ user_id: USER_FOUND._id });
-  }
+    if (!are_equal(PAYLOAD.verification_code, AUTH_FOUND.verification_code)) {
+      const LINKS = {
+        send_verification: AUTH_LINKS.SEND_VERIFICATION_AGAIN,
+      };
+      const RESOURCE = {
+        message: "Verification failed, send verification again",
+      };
+      return res
+        .status(401)
+        .json({ success: false, resource: RESOURCE, _links: LINKS });
+    }
 
-  if (!are_equal(PAYLOAD.verification_code, AUTH_FOUND.verification_code)) {
+    if (AUTH_FOUND.is_verification_token_expired()) {
+      const LINKS = {
+        send_verification: AUTH_LINKS.SEND_VERIFICATION_AGAIN,
+      };
+      const RESOURCE = {
+        message: "Verification token expired, send verification again",
+      };
+      return res
+        .status(401)
+        .json({ success: false, resource: RESOURCE, _links: LINKS });
+    }
+
+    USER_FOUND.is_verified = true;
+    AUTH_FOUND.verification_code = undefined;
+    AUTH_FOUND.verification_expire = undefined;
+    await USER_FOUND.save();
+    await AUTH_FOUND.save();
     const LINKS = {
-      send_verification: AUTH_LINKS.SEND_VERIFICATION_AGAIN,
+      sign_in: AUTH_LINKS.SIGN_IN,
+      forgot_password: AUTH_LINKS.FORGOT_PASSWORD,
+      change_email: AUTH_LINKS.CHANGE_EMAIL,
     };
     const RESOURCE = {
-      message: "Verification failed, send verification again",
+      message: "Your account have been verified, now go and sign in",
     };
-    return_success_response(res, 401, RESOURCE, LINKS);
+    return return_success_response(res, 200, RESOURCE, LINKS);
+  } catch (error) {
+    next(error);
   }
-
-  if (AUTH_FOUND.is_verification_token_expired()) {
-    const LINKS = {
-      send_verification: AUTH_LINKS.SEND_VERIFICATION_AGAIN,
-    };
-    const RESOURCE = {
-      message: "Verification token expired, send verification again",
-    };
-    return_success_response(res, 401, RESOURCE, LINKS);
-  }
-
-  USER_FOUND.is_verified = true;
-  AUTH_FOUND.verification_code = undefined;
-  AUTH_FOUND.verification_expire = undefined;
-  await USER_FOUND.save();
-  await AUTH_FOUND.save();
-  const LINKS = {
-    sign_in: AUTH_LINKS.SIGN_IN,
-    forgot_password: AUTH_LINKS.FORGOT_PASSWORD,
-    change_email: AUTH_LINKS.CHANGE_EMAIL,
-  };
-  const RESOURCE = {
-    message: "Your account have been verified, now go and sign in",
-  };
-  return_success_response(res, 200, RESOURCE, LINKS);
 }
 
 /**
@@ -198,7 +208,9 @@ async function verify_account(req, res, next) {
  * @throws {CustomError} If the user isn't found in database.
  */
 async function forgot_password(req, res, next) {
-  const USER_FOUND = await USER.findOne({ email: req.body.email });
+  const USER_FOUND = await USER.findOne({ email: req.body.email }).select(
+    "+email"
+  );
 
   if (!USER_FOUND) {
     return next(new CustomError("User not found", 404));
@@ -237,7 +249,7 @@ async function forgot_password(req, res, next) {
     const RESOURCE = {
       message: "Email sent. Go to your email account and finish the operation",
     };
-    return_success_response(res, 200, RESOURCE, LINKS);
+    return return_success_response(res, 200, RESOURCE, LINKS);
   } catch (error) {
     AUTH_FOUND.reset_password_token = undefined;
     AUTH_FOUND.reset_password_expire = undefined;
@@ -263,16 +275,12 @@ async function reset_password(req, res, next) {
     process.env.JWT_SECRET
   );
 
-  if(!DECODED_TOKEN){
-    return next(new CustomError("Invalid token", 401));
-  }
-
   const ENCRYPTED_PASSWORD = DECODED_TOKEN.encrypted_password;
 
   const DECRYPTED_PASSWORD = CRYPTO_JS.AES.decrypt(
     ENCRYPTED_PASSWORD,
     process.env.SECRET
-  ).toString(CryptoJS.enc.Utf8);
+  ).toString(CRYPTO_JS.enc.Utf8);
 
   const USER_FOUND = await USER.findOne({
     _id: DECODED_TOKEN.user_id,
@@ -293,7 +301,9 @@ async function reset_password(req, res, next) {
     const RESOURCE = {
       message: "Invalid token. Please, ask for a new password again.",
     };
-    return_success_response(res, 401, RESOURCE, LINKS);
+    return res
+        .status(401)
+        .json({ success: false, resource: RESOURCE, _links: LINKS });
   }
 
   if (is_greater_than(Date.now(), AUTH_FOUND.reset_password_expire)) {
@@ -303,8 +313,9 @@ async function reset_password(req, res, next) {
     const RESOURCE = {
       message: "Token has expired. Please, ask for a new password again.",
     };
-
-    return_success_response(res, 401, RESOURCE, LINKS);
+    return res
+    .status(401)
+    .json({ success: false, resource: RESOURCE, _links: LINKS });
   }
 
   USER_FOUND.password = DECRYPTED_PASSWORD;
@@ -321,7 +332,7 @@ async function reset_password(req, res, next) {
     message: "Change completed. Go and sign in with your new password",
   };
 
-  return_success_response(res, 200, RESOURCE, LINKS);
+  return return_success_response(res, 200, RESOURCE, LINKS);
 }
 
 /**
@@ -343,7 +354,7 @@ async function sign_out(req, res, next) {
     user_id: USER_FOUND._id,
     token: req.cookies.jwt,
   });
-  delete_cookies_and_logout(req, res);
+  return delete_cookies_and_logout(req, res);
 }
 
 /**
@@ -372,7 +383,7 @@ function delete_cookies_and_logout(req, res) {
     message: "You have logged out",
   };
 
-  return_success_response(res, 200, RESOURCE, LINKS);
+  return return_success_response(res, 200, RESOURCE, LINKS);
 }
 
 /**
@@ -385,9 +396,14 @@ function delete_cookies_and_logout(req, res) {
  * the new email is already stored in database.
  */
 async function change_email(req, res, next) {
-  const USER_FOUND = await USER.findOne({ email: req.body.email});
+  const USER_FOUND = await USER.findOne({ email: req.body.email });
   if (USER_FOUND) {
-    return next(new CustomError("An account associated with this email address has been detected. Try another", 404));
+    return next(
+      new CustomError(
+        "An account associated with this email address has been detected. Try another",
+        404
+      )
+    );
   }
   const VERIFICATION_CODE = UUID.v4();
   const VERIFICATION_EXPIRATION = Date.now() + 10 * (60 * 1000);
@@ -432,7 +448,7 @@ async function change_email(req, res, next) {
     const RESOURCE = {
       message: "Email sent. Go to your email account and finish the operation",
     };
-    return_success_response(res, 200, RESOURCE, LINKS);
+    return return_success_response(res, 200, RESOURCE, LINKS);
   } catch (error) {
     AUTH_FOUND.verification_code = undefined;
     AUTH_FOUND.verification_expire = undefined;
@@ -455,10 +471,6 @@ async function change_email(req, res, next) {
 async function verify_new_email(req, res, next) {
   const PAYLOAD = JWT.verify(req.params.token, process.env.JWT_SECRET);
 
-  if (!PAYLOAD) {
-    return next(new CustomError("Invalid token", 401));
-  }
-
   let AUTH_FOUND = await AUTH.findOne({ user_id: PAYLOAD.id });
 
   if (!AUTH_FOUND) {
@@ -472,7 +484,9 @@ async function verify_new_email(req, res, next) {
     const RESOURCE = {
       message: "Verification failed. Try to change email again with link below",
     };
-    return_success_response(res, 401, RESOURCE, LINKS);
+    return res
+        .status(401)
+        .json({ success: false, resource: RESOURCE, _links: LINKS });
   }
 
   if (AUTH_FOUND.is_verification_token_expired()) {
@@ -483,7 +497,9 @@ async function verify_new_email(req, res, next) {
       message:
         "Verification token expired. Try to change email again with link below",
     };
-    return_success_response(res, 401, RESOURCE, LINKS);
+    return res
+        .status(401)
+        .json({ success: false, resource: RESOURCE, _links: LINKS });
   }
 
   const USER_UPDATED = await USER.updateOne(
@@ -510,16 +526,16 @@ async function verify_new_email(req, res, next) {
   const RESOURCE = {
     message: "Your new email have been verified, now go and sign in",
   };
-  return_success_response(res, 200, RESOURCE, LINKS);
+  return return_success_response(res, 200, RESOURCE, LINKS);
 }
 
 module.exports = {
   change_email,
-  sign_in, 
+  sign_in,
   send_verification_again,
   forgot_password,
   verify_account,
   reset_password,
   verify_new_email,
-  sign_out
+  sign_out,
 };

@@ -18,7 +18,7 @@ const {
    */
 async function is_authenticated_middleware(req, res, next) {
   if (!is_request_authorized(req)) {
-    return next(new CustomError("Invalid authorization, you must sign in first", 401));
+    return next(new CustomError("Invalid authorization", 401));
   }
   const PAYLOAD = JWT.verify(
     get_token(req.headers.authorization),
