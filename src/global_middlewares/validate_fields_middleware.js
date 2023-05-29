@@ -84,15 +84,36 @@ function body_must_not_contain_attributes(attributes_to_exclude) {
     );
     if (FOUND_ATTRIBUTE) {
       return next(
-        new CustomError(`The attribute '${FOUND_ATTRIBUTE}' is not allowed`, 400)
+        new CustomError(
+          `The attribute '${FOUND_ATTRIBUTE}' is not allowed`,
+          400
+        )
       );
     }
     return next();
   };
 }
 
+function meets_email_submission_requirements(req, res, next) {
+  const ATTRIBUTES_REQUIRED = ["email", "name", "text"];
+  const BODY_ATTRIBUTES = Object.keys(req.body);
+  const CONTAIN_ALL_ATTRIBUTES_REQUIRED = ATTRIBUTES_REQUIRED.every(
+    (attribute) => BODY_ATTRIBUTES.includes(attribute)
+  );
+  if (!CONTAIN_ALL_ATTRIBUTES_REQUIRED) {
+    return next(
+      new CustomError(
+        `Some attribute is missing, to send us feeback the body must contain: email, name and text attributes`,
+        400
+      )
+    );
+  }
+  next();
+}
+
 module.exports = {
   meets_with_email_requirements,
   meets_with_password_requirements,
   body_must_not_contain_attributes,
+  meets_email_submission_requirements
 };

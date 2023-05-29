@@ -1,7 +1,7 @@
 const SEND_EMAIL = require("./send_email");
 const JWT = require("jsonwebtoken");
 const UUID = require("uuid");
-
+const USER_LINKS = require("../resources/user/utils/response_links");
 /**
  * Function that sees if first_parameter is equal to second_parameter.
  * @param {any} first_parameter - The first parameter to evaluate.
@@ -76,10 +76,11 @@ function delete_element_from_array(element, array) {
  * @param {Object} links - The links to other route to guide the client.
  * @returns {Object} The response object from the HTTP response
  */
-function return_success_response(res, status, resource, links) {
+function return_response(res, status, resource, links, success) {
+  links.feedback = USER_LINKS.SEND_FEEDBACK;
   return res
     .status(status)
-    .json({ success: true, resource: resource, _links: links });
+    .json({ success: success, resource: resource, _links: links });
 }
 
 /**
@@ -89,41 +90,43 @@ function return_success_response(res, status, resource, links) {
  * @throws {CustomError} - If the sending fail
  */
 async function send_verification(user, auth) {
-  const VERIFICATION_CODE = UUID.v4();
-  const VERIFICATION_EXPIRATION = Date.now() + 10 * (60 * 1000);
-  const TOKEN = JWT.sign(
-    {
-      email: user.email,
-      verification_code: VERIFICATION_CODE,
-    },
-    process.env.JWT_SECRET
-  );
-  const VERIFICATION_URL = `http://localhost:3000/v1/auth/verification/${TOKEN}`;
-  //esto despues va a ser un archivo html lindo
-  const EMAIL_BODY = `
+  try {
+    const VERIFICATION_CODE = UUID.v4();
+    const VERIFICATION_EXPIRATION = Date.now() + 10 * (60 * 1000);
+    const TOKEN = JWT.sign(
+      {
+        email: user.email,
+        verification_code: VERIFICATION_CODE,
+      },
+      process.env.JWT_SECRET
+    );
+    const VERIFICATION_URL = `http://localhost:3000/v1/auth/verification/${TOKEN}`;
+    //esto despues va a ser un archivo html lindo
+    const EMAIL_BODY = `
       <h1>Confirm verification</h1>
       <p>To confirm your account, click in the following link: </p>
       <a href='${VERIFICATION_URL}' clicktracking='off'>Verify Account</a>
     `;
 
-  
-  try {
-    console.log(user.email)
-    SEND_EMAIL({
-      to: user.email,
-      subject: "Verify your account",
-      text: EMAIL_BODY,
-    });
-  
-    auth.verification_code = VERIFICATION_CODE;
-    auth.verification_expire = VERIFICATION_EXPIRATION;
-    await auth.save();
-  } catch (error) {
-    auth.verification_code = undefined;
-    auth.verification_expire = undefined;
+    try {
+      SEND_EMAIL({
+        to: user.email,
+        subject: "Verify your account",
+        text: EMAIL_BODY,
+      });
 
-    await auth.save();
-    return next(new CustomError(error.message, 500));
+      auth.verification_code = VERIFICATION_CODE;
+      auth.verification_expire = VERIFICATION_EXPIRATION;
+      await auth.save();
+    } catch (error) {
+      auth.verification_code = undefined;
+      auth.verification_expire = undefined;
+
+      await auth.save();
+      return next(new CustomError(error.message, 500));
+    }
+  } catch (error) {
+    return next(error);
   }
 }
 
@@ -134,6 +137,6 @@ module.exports = {
   is_greater_or_equal_than,
   is_lesser_or_equal_than,
   delete_element_from_array,
-  return_success_response,
+  return_response,
   send_verification,
 };

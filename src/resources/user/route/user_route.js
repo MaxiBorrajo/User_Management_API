@@ -170,6 +170,22 @@ ROUTER.delete(
   USER_CONTROLLER.delete_user_by_id
 );
 
+/**
+ * Send me (https://github.com/MaxiBorrajo) feedback about this API
+ *
+ * @route {POST} /v1/users/feedback
+ * @body {String} email - Is required and must be a valid email.
+ * @body {String} name - Is required
+ * @body {String} text - Is required
+ * @throws {CustomError} - If the email sender fails or if an attribute is missing
+ */
+ROUTER.post(
+  "/feedback",
+  VALIDATION_FIELDS_MIDDLEWARE.meets_email_submission_requirements,
+  VALIDATION_FIELDS_MIDDLEWARE.meets_with_email_requirements,
+  USER_CONTROLLER.send_feedback
+);
+
 
 //exports
 module.exports = ROUTER;

@@ -11,14 +11,18 @@ const { is_request_authorized } = require("../../auth/utils/auth_functions");
  * @throws {CustomError} If the Json Web Token it was already used by the user.
  */
 async function is_token_repeated(user_id, token, next) {
-  const BLACK_LISTED_TOKEN_FOUND = await BLACK_LISTED_TOKEN.findOne({
-    user_id: user_id,
-    token: token,
-  });
-  if (BLACK_LISTED_TOKEN_FOUND) {
-    return next(new CustomError("Invalid token", 401));
+  try {
+    const BLACK_LISTED_TOKEN_FOUND = await BLACK_LISTED_TOKEN.findOne({
+      user_id: user_id,
+      token: token,
+    });
+    if (BLACK_LISTED_TOKEN_FOUND) {
+      return next(new CustomError("Invalid token", 401));
+    }
+    return next();
+  } catch (error) {
+    return next(error);
   }
-  return next();
 }
 
 /**
@@ -37,7 +41,7 @@ async function check_black_listed_tokens_middleware(req, res, next) {
   }
   const TOKEN = req.cookies.jwt;
   const USER_ID = req.user.id;
-  is_token_repeated(USER_ID, TOKEN, next);
+  return is_token_repeated(USER_ID, TOKEN, next);
 }
 
 module.exports = check_black_listed_tokens_middleware;

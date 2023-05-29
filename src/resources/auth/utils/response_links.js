@@ -61,7 +61,8 @@ const FORGOT_PASSWORD = {
     },
   },
   example_body: {
-    email: "example@gmail.com"
+    email: "example@gmail.com",
+    password:"User1234$"
   },
 };
 
