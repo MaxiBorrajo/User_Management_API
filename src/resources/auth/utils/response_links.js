@@ -1,4 +1,4 @@
-const URL = "http://localhost:3000/v1/auth/";
+const URL = "https://usermanagementapi-production.up.railway.app/v1/auth/";
 
 const SIGN_IN = {
   href: `${URL}`,

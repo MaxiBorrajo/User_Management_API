@@ -1,4 +1,4 @@
-const URL = "http://localhost:3000/v1/users/";
+const URL = "https://usermanagementapi-production.up.railway.app/v1/users/";
 
 const GET_ALL_USERS = {
   href: `${URL}`,
