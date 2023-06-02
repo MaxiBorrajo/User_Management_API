@@ -15,7 +15,6 @@ function start_server() {
   // Starts server
   SERVER.listen(process.env.PORT, () => {
     console.log(`Listening on ${process.env.PORT}.`);
-    console.log(`IP: ${process.env.RAILWAY_STATIC_IP}.`);
     // Establish connection with database
     database_connection();
   });
