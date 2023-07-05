@@ -13,7 +13,7 @@ const {
  */
 function start_server() {
   // Starts server
-  SERVER.listen(process.env.PORT, () => {
+  SERVER.listen(process.env.PORT || 3000, () => {
     console.log(`Listening on ${process.env.PORT}.`);
     // Establish connection with database
     database_connection();
