@@ -11,12 +11,13 @@ const {
  * and establish a connection with the database before starts listening.
  * @throws {Error} - If cannot connects with database throws an error.
  */
-async function start_server() {
+function start_server() {
   // Establish connection with database
-  await database_connection();
-  // Starts server
-  SERVER.listen(process.env.PORT || 3000, () => {
-    console.log(`Listening on ${process.env.PORT}.`);
+  database_connection().then(() => {
+    // Starts server
+    SERVER.listen(process.env.PORT || 3000, () => {
+      console.log(`Listening on ${process.env.PORT}.`);
+    });
   });
 }
 
