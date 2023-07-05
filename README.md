@@ -4,7 +4,7 @@ This API provides basic functionality for creating, updating, and deleting users
 
 ## Endpoints
 
-**Base URL: https://usermanagementapi-production.up.railway.app/v1**
+**Base URL: https://api-user-management.cyclic.app/v1**
 
 ### Users
 
