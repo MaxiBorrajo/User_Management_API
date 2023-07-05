@@ -1,4 +1,4 @@
-const URL = "https://usermanagementapi-production.up.railway.app/v1/users/";
+const URL = "https://api-user-management.cyclic.app/v1/users/";
 
 const GET_ALL_USERS = {
   href: `${URL}`,

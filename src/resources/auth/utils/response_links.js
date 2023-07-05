@@ -1,4 +1,4 @@
-const URL = "https://usermanagementapi-production.up.railway.app/v1/auth/";
+const URL = "https://api-user-management.cyclic.app/v1/auth/";
 
 const SIGN_IN = {
   href: `${URL}`,
