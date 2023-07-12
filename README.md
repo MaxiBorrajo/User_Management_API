@@ -1,10 +1,14 @@
 # User Management API
 
 This API provides basic functionality for creating, updating, and deleting users. User authentication and authorization are implemented using Json Web Token and user roles. The stack used includes MongoDB, Express, and Node.js. This is my first significant API project, and I welcome feedback from the community to enhance its quality.
+## First steps
 
+To get started, the first step is to register yourself using the {POST} endpoint at https://api-user-management.cyclic.app/v1/users/ with your email address and password. An email will then be sent to you for account verification. Please check your email account and follow the verification process.
+
+Next, the second step is to log in to the {POST} endpoint at https://api-user-management.cyclic.app/v1/auth/ using the previously submitted email and password. Once authenticated, a Bearer Token will be sent to you. Make sure to include this token in the Authorization header for accessing the remaining endpoints.
 ## Endpoints
 
-**Base URL: https://usermanagementapi-production.up.railway.app/v1**
+**Base URL: https://api-user-management.cyclic.app/v1**
 
 ### Users
 
