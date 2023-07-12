@@ -5,6 +5,8 @@ const APP = EXPRESS();
 const MORGAN = require("morgan");
 const COOKIE_PARSER = require("cookie-parser");
 const CORS = require("cors");
+const XSS = require("xss-clean");
+const EXPRESS_MONGO_SANITIZE = require("express-mongo-sanitize");
 const ERROR_HANDLER_MIDDLEWARE = require("./src/global_middlewares/error_handler_middleware");
 const USER_ROUTE = require("./src/resources/user/route/user_route");
 const AUTH_ROUTE = require("./src/resources/auth/route/auth_route");
@@ -15,6 +17,8 @@ APP.use(EXPRESS.json());
 APP.use(EXPRESS.urlencoded({ extended: false }));
 APP.use(MORGAN("dev"));
 APP.use(COOKIE_PARSER());
+APP.use(XSS());
+APP.use(EXPRESS_MONGO_SANITIZE());
 
 //routes
 APP.use("/v1/users", USER_ROUTE);

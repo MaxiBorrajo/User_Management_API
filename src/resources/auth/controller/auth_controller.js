@@ -231,7 +231,7 @@ async function forgot_password(req, res, next) {
     );
 
     await AUTH_FOUND.save();
-    const RESET_PASSWORD_URL = `http://localhost:3000/v1/auth/new_password/${RESET_PASSWORD_TOKEN}`;
+    const RESET_PASSWORD_URL = `https://api-user-management.cyclic.app/v1/auth/new_password/${RESET_PASSWORD_TOKEN}`;
     //esto despues va a ser un archivo html lindo
     const RESET_PASSWORD_EMAIL_BODY = `
         <h1>Reset password</h1>

@@ -3,7 +3,7 @@ const CustomError = require("../../../global_utils/custom_error");
 const { is_request_authorized } = require("../../auth/utils/auth_functions");
 
 /**
- * Middleware that checks if the user has the required roles to access a specific route.
+ * Middleware that checks if the a json web token is repeated
  *
  * @param {String} user_id - User's unique identifier.
  * @param {String} token - Json Web Token
